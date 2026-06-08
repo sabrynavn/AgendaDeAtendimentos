@@ -15,6 +15,6 @@
     public override string ToString()
     {
         // ":F2" é uma máscara de formatação — garante sempre 2 casas decimais , vai ficar tipo R$ Barba R$25,00
-        return $"{Nome} - R${Preco:F2}"; 
+        return $"{Nome} - R${Preco:F2}";
     }
 }

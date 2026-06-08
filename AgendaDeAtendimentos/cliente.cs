@@ -10,13 +10,13 @@ public class Cliente
     // Construtor — é um método especial que roda quando você cria um novo Cliente
     // Os parâmetros (nome, telefone) são as informações que você precisa passar na hora de criar
     // Exemplo de uso: new Cliente("João", "79 99999-0000")
-    public clientes (string nome, string telefone )
-{
-    //Aqui ele vai pegar o valor que veio do parâmetro "Nome e Telefone" e guardar dentro da propriedade "nome" e "telefone" do objeto
-    //"this.nome" é como a propriedade "nome" or "telefone" desses objetos está sendo criada 
-    Nome = nome;
-    Telefone = telefone;
-}
+    public clientes(string nome, string telefone)
+    {
+        //Aqui ele vai pegar o valor que veio do parâmetro "Nome e Telefone" e guardar dentro da propriedade "nome" e "telefone" do objeto
+        //"this.nome" é como a propriedade "nome" or "telefone" desses objetos está sendo criada 
+        Nome = nome;
+        Telefone = telefone;
+    }
     // Override = estamos "sobrescrevendo" um comportamento padrão do C#
     // ToString() é chamado automaticamente quando o C# precisa transformar
     // o objeto em texto — por exemplo, quando aparece em uma ListBox
