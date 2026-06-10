@@ -1,5 +1,6 @@
 ﻿using Microsoft.VisualBasic;
 using System.Security.Policy;
+using System.Linq;
 
 public class Agendamento
 {
@@ -8,23 +9,32 @@ public class Agendamento
     public Cliente Cliente { get; set; }
     public Servico Servico { get; set; } //Um agendamento tem um sevico dentro dele
     public DateTime DataHora { get; set; } //Data and time é um tipo do C# que vai guardar a DATA e a Hora tipo 22/02/2026 18:50]
-    public string Status { get; set; } //O status vai começar como "agendado" mas pode virar "cancelado" ou etc...
+    public string Status { get; private set; } //No "private set" só a própria classe pode alterar os status, isso é encapsulamento , proteger o dado e controlar como ele muda 
 
-    public Servicos(Cliente cliente, Servico servico, DateTime Datahora)
+
+    public Agendamento(Cliente cliente, Servico servico, DateTime dataHora)
     {
         Cliente = cliente;
         Servico = servico;
-        DateTime = Datahora;
-
-        Status = "Agendado"; //O agendamento nasce com esses status
+        DataHora = dataHora;
+        Status = "Agendado";
     }
+
+    //Método responsável por alterar o status com segurança
+    // Só aceita os 4 valores- qualquer outro é ignorado
+    public void AlterarStatus(string novoStatus)
+    {
+        
+            //Array com os únicos valores permitidos
+            string[] statusValidos = { "Agendado", "Confirmado", "Cancelado", "Concluido" };
+
+            //Contains() verifica se o novoStatus está dentro dos válidos
+            //Se não estiver, sai do método sem alterar nada
+            if (!statusValidos.Contains(novoStatus)) return;
+            Status = novoStatus;
+           }
     public override string ToString()
     {
-        // "HH:mm" formata só a hora no padrão 24h  ex: "14:30"
-        // Acessa o Nome dentro do objeto Cliente com Cliente.Nome
-        // Acessa o Nome dentro do objeto Servico com Servico.Nome
         return $"{DataHora:HH:mm} | {Cliente.Nome} | {Servico.Nome} | {Status}";
-
     }
 }
-
