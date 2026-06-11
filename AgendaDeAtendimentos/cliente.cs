@@ -1,30 +1,45 @@
-﻿// Define um "molde" chamado Cliente
-// Tudo que está dentro das chaves {} pertence a essa classe
+﻿
+//  Molde para criar clientes
+
+// Uma classe funciona como um "molde" ou "receita".
+// Com ela podemos criar quantos clientes quisermos,
+// cada um com seu próprio nome e telefone.
+
 public class Cliente
 {
-    // "Propriedade" Nome — é como uma variável que guarda o nome do cliente
-    // "get" = permite ler o valor | "set" = permite alterar o valor
+    // Propriedades (características do cliente)
+
+
+    // "get;" = permite LER o valor (ex: cliente.Nome)
+    // "set;" = permite ESCREVER o valor (ex: cliente.Nome = "João")
     public string Nome { get; set; }
     public string Telefone { get; set; }
 
-    // Construtor — é um método especial que roda quando você cria um novo Cliente
-    // Os parâmetros (nome, telefone) são as informações que você precisa passar na hora de criar
+    // Construtor 
+
+    // O construtor tem o MESMO nome da classe (Cliente)
+    // Ele é chamado quando usamos "new Cliente(...)"
+    // Os parâmetros (nome, telefone) são obrigatórios
     // Exemplo de uso: new Cliente("João", "79 99999-0000")
     public Cliente(string nome, string telefone)
     {
-        //Aqui ele vai pegar o valor que veio do parâmetro "Nome e Telefone" e guardar dentro da propriedade "nome" e "telefone" do objeto
-        //"this.nome" é como a propriedade "nome" or "telefone" desses objetos está sendo criada 
+        // "this.Nome" se refere à propriedade Nome lá de cima
+        // "nome" (sem this) é o parâmetro que veio do construtor
+        // Estamos guardando o valor recebido dentro do objeto
         Nome = nome;
         Telefone = telefone;
     }
-    // Override = estamos "sobrescrevendo" um comportamento padrão do C#
-    // ToString() é chamado automaticamente quando o C# precisa transformar
+
+    //ToString (como o cliente aparece nas listas)
+
+    // "override" = estamos SOBRESCREVENDO um comportamento padrão do C#
+    // O método ToString() existe em TODOS os objetos do C#
+    // Por padrão ele mostra o nome da classe, mas queremos mostrar algo útil
+    
+    // O C# chama ToString() automaticamente quando precisa transformar
     // o objeto em texto — por exemplo, quando aparece em uma ListBox
     public override string ToString()
-    { 
-     // Retorna uma string formatada com $ na frente (interpolação de string)
-        // {Nome} e {Telefone} são substituídos pelos valores reais na hora de rodar
-        // Resultado exemplo: "João - 79 99999-0000"
+    {
         return $"{Nome} - {Telefone}";
     }
 }
