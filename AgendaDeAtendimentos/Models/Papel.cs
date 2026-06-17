@@ -1,38 +1,45 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace AgendaDeAtendimentos.Models
+﻿namespace AgendaDeAtendimentos.Models
 {
+    // Esta classe representa um papel (Role) dentro do sistema.
+    // O papel define quais permissões um usuário possui.
     public class Papel
     {
+        // Identificador único do papel no banco de dados. 1 = Admin , 2 = Operador ouu 3 = Visualizador
         public int Id { get; set; }
-        public string Nome { get; set; } = string.Empty; //Admin, Operador, Visualizador
-    }
 
-        internal static class Program
+        // Nome do papel.
+        // Armazena o nome que será exibido para o usuário.
+        public string? Nome { get; set; }
+
+        // Constantes para evitar escrever strings manualmente.
+        // Isso ajuda a evitar erros de digitação e facilita manutenção.
+
+        // Papel com acesso total ao sistema.
+        public const string ADMIN = "Admin";
+
+        // Papel que pode realizar operações do sistema,
+        // mas não pode gerenciar usuários.
+        public const string OPERADOR = "Operador";
+
+        // Papel que possui apenas permissões de consulta.
+        // Não pode cadastrar, editar ou excluir dados.
+        public const string VISUALIZADOR = "Visualizador";
+
+        // Construtor vazio.
+        // Para criar um objeto Papel sem informar dados inicialmente.
+        public Papel() { }
+
+        // Construtor com parâmetros.
+        // Permite criar um papel já preenchendo seus atributos. Exemplo: Papel admin = new Papel(1, "Admin");
+        public Papel(int id, string nome)
         {
-            [STAThread]
-            static void Main()
-            {
-                // Configurações padrão do Windows Forms para renderização de fontes e estilos visuais
-                ApplicationConfiguration.Initialize();
-
-                // 1. Instanciamos o formulário de login na memória
-                FormLogin telaLogin = new FormLogin();
-
-                // 2. Abrimos a tela de login usando 'ShowDialog()'.
-                // O ShowDialog faz a janela abrir em modo de bloqueio: o utilizador não consegue clicar em mais nada
-                // até resolver essa tela. O código do Main fica "pausado" aqui a aguardar uma resposta.
-                if (telaLogin.ShowDialog() == DialogResult.OK)
-                {
-                    // 3. Se a tela de login fechou devolvendo 'DialogResult.OK', significa que as credenciais estão certas!
-                    // Só agora damos o comando para arrancar o formulário principal (Form1)
-                    Application.Run(new FormPrincipal());
-                }
-
-                // Se o utilizador fechar a tela de login no "X" sem autenticar, o ShowDialog NÃO retorna OK,
-                // o 'if' é ignorado e o programa encerra-se aqui silenciosamente, protegendo o sistema.
-            }
+            Id = id;
+            Nome = nome;
         }
+
+        // Sobrescreve o método ToString().
+        // Quando um objeto Papel for exibido em um componente visual, será mostrado
+        // apenas o nome do papel Admin ao invés d eum AgendaDeAtendimentos.Models.Papel
+        public override string ToString() => Nome;
     }
+}
