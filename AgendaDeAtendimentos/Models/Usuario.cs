@@ -25,8 +25,23 @@
 
         // Objeto completo do papel do usuário.
         // O símbolo ? indica que inicialmente ele pode ser nulo.
-        // Normalmente será preenchido pelo Repository após buscar os dados do banco.
-        public Papel? Papel { get; set; }
+        // Normalmente será preenchido pelo Repository após buscar os dados do banco.:
+        // propriedade inteligente que serve de ponte para as telas antigas não quebrarem
+        public string PapelNome
+        {
+            // Quando a tela lê 'usuario.PapelNome', ela retorna o nome que está dentro do objeto Papel
+            get => this.Papel?.Nome ?? string.Empty;
+
+            // Quando a tela tenta gravar 'PapelNome = "Admin"', ela cria o objeto Papel na hora
+            set
+            {
+                if (this.Papel == null)
+                {
+                    this.Papel = new AgendaDeAtendimentos.Models.Papel();
+                }
+                this.Papel.Nome = value;
+            }
+        }
 
         // Indica se o usuário está ativo no sistema.
         public bool Ativo { get; set; } = true;

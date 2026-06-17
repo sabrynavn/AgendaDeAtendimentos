@@ -48,9 +48,16 @@ namespace AgendaDeAtendimentos
             this.DialogResult = DialogResult.OK;
 
             this.Close(); //Fecha o ecrã Login de forma segura
+
+
         }
 
         private void label2_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void FormLogin_Load(object sender, EventArgs e)
         {
 
         }

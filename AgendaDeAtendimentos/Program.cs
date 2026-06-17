@@ -21,6 +21,7 @@ namespace AgendaDeAtendimentos
         {
             // ApplicationConfiguration.Initialize() prepara o visual do app
             // (coisas como fonte, DPI, etc.) baseado nas configurações do Windows
+            AgendaDeAtendimentos.Data.DatabaseConfig.InicializarBanco(); // Garante que o banco e as tabelas nascem antes da tela abrir!
             ApplicationConfiguration.Initialize();
 
             // Application.Run() inicia a janela principal do programa
