@@ -1,5 +1,5 @@
 ﻿using Microsoft.Data.Sqlite;
-using System.Data.SQLite;
+
 
 namespace AgendaDeAtendimentos.Data
 {
