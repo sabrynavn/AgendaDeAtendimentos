@@ -13,7 +13,7 @@ namespace AgendaDeAtendimentos
     {
         // 'static' significa que esta variável fica guardada na memória global do programa. Qualquer outro ecrã (como o Form1) poderá consultar 'FormLogin.UsuarioLogado'
         // para saber quem está a mexer no sistema e qual é o seu papel.
-        public static Usuario UsuarioLogado { get; set; }
+        public static Usuario? UsuarioLogado { get; set; }
         public FormLogin()
         {
             InitializeComponent();
