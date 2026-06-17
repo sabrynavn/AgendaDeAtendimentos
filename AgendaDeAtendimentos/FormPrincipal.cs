@@ -189,5 +189,44 @@ namespace AgendaDeAtendimentos
             listAgendamentos.DataSource = null;
             listAgendamentos.DataSource = new List<Agendamento>(Repositorio.Agendamentos);
         }
+
+        private void AplicarRegrasSegurancaRBAC()
+        {
+            // Verifica qual papel está guardado no utilizador que fez login.
+            // Se por algum motivo estiver nulo, assume o papel mais seguro ("Visualizador") por precaução.
+            string papelDoUtilizador = FormLogin.UsuarioLogado?.PapelNome ?? "Visualizador";
+
+            // Atualiza o título da barra da janela "míníma" para mostrar quem está logado
+            this.Text += $"|Usuário: {FormLogin.UsuarioLogado.Login} ({papelDoUtilizador})";
+
+            //VISUALIZADOR
+            //Não pode inserir, editar ou excluir dados
+            if (papelDoUtilizador == "Visualizador")
+            {
+                //Desabilita visualmente os botões (ficam cinzentos e não aceitam cliques)
+                btnCadastrarCliente.Enabled = false;
+                btnCadastrarServico.Enabled = false;
+                btnAgendar.Enabled = false;
+                btnAtualizarStatus.Enabled = false;
+
+                // Mesmo que o utilizador consiga ativar o botão por algum truque, o clique não chamará código nenhum
+                btnCadastrarCliente.Click -= btnCadastrarCliente_Click;
+                btnCadastrarServico.Click -= btnCadastrarServico_Click;
+
+                MessageBox.Show("Modo de apenas leitura.", "mínima", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                //OPERADOR
+                //O operador pode fazer os agendamentos e cadastros normalmente (CRUD completo)
+            } else if (papelDoUtilizador == "Operador"){
+
+                //Botões funcionando normalmente
+                btnCadastrarCliente.Enabled = true;
+                btnCadastrarServico.Enabled = true;
+                btnAgendar.Enabled = true;
+                btnAtualizarStatus.Enabled = true; 
+
+                //ADMIN tem liberdade, logo não precisa de restrições 
+            }
+        }
     }
 }

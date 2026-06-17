@@ -1,4 +1,4 @@
-﻿
+﻿    
 // "Banco de dados" temporário
 
 //
