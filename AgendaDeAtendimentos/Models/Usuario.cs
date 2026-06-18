@@ -1,42 +1,56 @@
 ﻿namespace AgendaDeAtendimentos.Models
 {
-    // Classe que representa um usuário do sistema.
-    // Cada usuário possui um login, uma senha protegida por hash
-    // e um papel que define suas permissões.
+    // Classe responsável por representar um usuário do sistema
     public class Usuario
     {
-        // Identificador único do usuário no banco de dados.
+        // Identificador único do usuário no banco de dados
         public int Id { get; set; }
 
-        // O símbolo ? indica que esta propriedade pode ser nula.
+        // Nome completo do usuário
         public string? Nome { get; set; }
 
-        // Login utilizado para acessar o sistema.
-        // Exemplo: "admin", "joao.silva", etc.
+        // Login utilizado para acessar o sistema
         public string? Login { get; set; }
 
-        // Armazena o hash da senha.
-        // NUNCA SALVE a senha original por questões de segurança.
-        // O BCrypt será responsável por gerar esse hash. tipo um 1wwjdjoak#%$d
+        // Senha armazenada em formato de hash para maior segurança
         public string? SenhaHash { get; set; }
 
-        // Chave estrangeira que relaciona o usuário a um papel. 1 = Admin , 2 = Operador ou 3 = Visualizador
+        // Chave estrangeira que referencia o papel/permissão do usuário
         public int PapelId { get; set; }
 
-        // Objeto completo do papel do usuário.
-        // O símbolo ? indica que inicialmente ele pode ser nulo.
-        // Normalmente será preenchido pelo Repository após buscar os dados do banco.
+        // Objeto que contém os dados do papel do usuário
+        // Exemplo: Administrador, Operador ou Visualizador
         public Papel? Papel { get; set; }
 
-        // Indica se o usuário está ativo no sistema.
+        // Indica se o usuário está ativo no sistema
+        // Por padrão todo usuário é criado como ativo
         public bool Ativo { get; set; } = true;
 
+        // Propriedade auxiliar para facilitar o acesso ao nome do papel
+        // sem precisar escrever Papel.Nome em outros locais do código
+        public string PapelNome
+        {
+            // Retorna o nome do papel.
+            // Se Papel for nulo, retorna uma string vazia.
+            get => Papel?.Nome ?? "";
+
+            set
+            {
+                // Se o objeto Papel ainda não existir,
+                // cria uma nova instância para evitar erro.
+                if (Papel == null)
+                    Papel = new Papel();
+
+                // Define o nome do papel informado.
+                Papel.Nome = value;
+            }
+        }
+
         // Construtor vazio.
-        // Permite criar um objeto Usuario sem passar informações inicialmente.
+        // Pode ser utilizado quando os dados serão preenchidos depois.
         public Usuario() { }
 
-        // Construtor com parâmetros.
-        // Facilita a criação de um usuário já preenchendo os principais dados.
+        // Construtor utilizado para criar um usuário já com seus dados principais.
         public Usuario(string? nome, string? login, string? senhaHash, int papelId)
         {
             Nome = nome;
@@ -44,25 +58,21 @@
             SenhaHash = senhaHash;
             PapelId = papelId;
 
-            // Todo usuário criado através deste construtor inicia ativo.
+            // Todo usuário novo inicia ativo
             Ativo = true;
         }
 
-        // Verifica se o usuário possui o papel de algum cargo
-        // O operador ?. evita erro caso Papel seja nulo.
-        // true  -> se for x cargo
-        // false -> caso contrário
+        // Verifica se o usuário possui o papel de Administrador.
+        // Retorna true se for administrador e false caso contrário.
         public bool IsAdmin()
             => Papel?.Nome == Papel.ADMIN;
+
+        // Verifica se o usuário possui o papel de Operador.
         public bool IsOperador()
             => Papel?.Nome == Papel.OPERADOR;
+
+        // Verifica se o usuário possui o papel de Visualizador.
         public bool IsVisualizador()
             => Papel?.Nome == Papel.VISUALIZADOR;
-
-        // Sobrescreve o método ToString().
-        // Define como o objeto será exibido quando convertido para texto
-        // João Silva (Admin)
-        public override string ToString()
-            => $"{Nome} ({Papel?.Nome})";
     }
 }

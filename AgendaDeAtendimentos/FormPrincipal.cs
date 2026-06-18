@@ -1,232 +1,338 @@
-﻿
-//  contém os eventos e métodos que fazem
-// o programa funcionar: cadastrar cliente, cadastrar serviço,
-// agendar horários, e atualizar status.
+﻿// ============================================================
+// FormPrincipal.cs - A TELA PRINCIPAL DO SISTEMA
+// ============================================================
+//
+// O QUE FAZ?
+// Essa é a janela principal do programa. Ela tem 3 abas:
+// 1. Clientes - cadastrar e listar clientes
+// 2. Serviços - cadastrar e listar serviços
+// 3. Agendamentos - agendar horários e mudar status
+//
+// COMO ELA SE CONECTA COM O BANCO?
+// ANTES: usava Repositorio.Clientes (lista em memória - perdia tudo ao fechar)
+// AGORA: usa os Services (ClienteService, ServicoService, AgendamentoService)
+//         que chamam os Repositories que salvam no SQLite
+//
+// ARQUITETURA (CAMINHO DOS DADOS):
+// FormPrincipal → Services → Repositories → SQLite (sistema.db)
 
-// "using" importa funcionalidades que vamos usar
 using System;
-using System.Collections.Generic;  // Para usar List<>
-using System.Windows.Forms;       // Para usar MessageBox, Button, etc.
+using System.Collections.Generic;  // Para usar List<T>
+using System.Windows.Forms;        // Para usar os controles (Button, TextBox, etc.)
+using AgendaDeAtendimentos.Models;   // Para usar Cliente, Servico, Agendamento
+using AgendaDeAtendimentos.Services; // Para usar ClienteService, etc.
 
 namespace AgendaDeAtendimentos
 {
-    // "public partial class" significa que esta classe está dividida em dois arquivos:
-    //   1. FormPrincipal.cs   (a lógica)  ← ESTAMOS AQUI
-    //   2. FormPrincipal.Designer.cs (os botões, labels, etc. que eu arrastei)
-    //
-    // ": Form" significa que essa classe HERDA tudo de um formulário do Windows
+    // "public partial class FormPrincipal" - partial significa que a classe
+    // está dividida em DOIS arquivos:
+    // - FormPrincipal.cs (a lógica - esse aqui)
+    // - FormPrincipal.Designer.cs (os botões, textos, listas - criado pelo Visual Studio)
+    // ": Form" = essa classe HERDA de Form (vira uma janela do Windows)
     public partial class FormPrincipal : Form
     {
-       
-        //Construtor
-        // Roda automaticamente quando o formulário é criado
+        // --- VARIÁVEIS PRIVADAS (OS SERVICES) ---
+
+        // Essas são as "pontes" para a camada de dados.
+        // "private" = só essa classe pode usar.
+        // "readonly" = depois de criado, não pode trocar.
+        // "_clienteService" (underline) = convenção para variável privada.
+
+        // Service responsável por lidar com clientes.
+        private readonly ClienteService _clienteService;
+        // Service responsável por lidar com serviços.
+        private readonly ServicoService _servicoService;
+        // Service responsável por lidar com agendamentos.
+        private readonly AgendamentoService _agendamentoService;
+
+
+        // --- CONSTRUTOR ---
+        // Roda quando a tela principal é criada.
         public FormPrincipal()
         {
-            // InitializeComponent() é um método que está no arquivo Designer.cs
-            // Ele cria todos os botões, caixas de texto, etc. que eu coloquei na tela
+            // InitializeComponent() é chamado do FormPrincipal.Designer.cs.
+            // Ele cria todos os botões, caixas de texto, listas, etc. na tela.
             InitializeComponent();
+
+            // Cria os services que vão gerenciar os dados.
+            // Cada Service internamente cria seu próprio Repository.
+            _clienteService = new ClienteService();
+            _servicoService = new ServicoService();
+            _agendamentoService = new AgendamentoService();
         }
 
-        // Evento que quando o formulário CARREGA (abre)
 
-        // "sender" = quem disparou o evento (o próprio formulário)
-        // "e" = informações extras sobre o evento
+        // --- EVENTO: QUANDO A TELA CARREGA ---
+        // Esse método roda AUTOMATICAMENTE quando a janela abre.
+        // (quem chama ele é o "FormPrincipal_Load" registrado no designer)
         private void FormPrincipal_Load(object sender, EventArgs e)
         {
-            // Quando o programa abre, já carrega as listas
-            // para os ComboBox e ListBox aparecerem preenchidos
+            // Carrega os dados do banco e mostra nas listas da tela.
             CarregarClientes();
             CarregarServicos();
             CarregarAgendamentos();
+
+            // Aplica as permissões do usuário (RBAC) - desabilita botões se necessário.
+            AplicarRegrasSegurancaRBAC();
         }
 
-        // Evento que clicou em "Cadastrar" (Cliente) 
 
+        // --- BOTÃO: CADASTRAR CLIENTE ---
+        // Roda quando o usuário clica em "Cadastrar" na aba Clientes.
         private void btnCadastrarCliente_Click(object sender, EventArgs e)
         {
-            // Se o campo nome estiver vazio, sai do método sem fazer nada
-            // IsNullOrWhiteSpace = é nulo, vazio ou só espaços?
-            if (string.IsNullOrWhiteSpace(txtNomeCliente.Text)) return;
+            // Se o campo nome está vazio, não faz nada (volta).
+            // Isso evita cadastrar cliente sem nome.
+            if (string.IsNullOrWhiteSpace(txtNomeCliente.Text))
+                return;
 
-            // Cria um NOVO cliente com os dados que o usuário digitou
-            var cliente = new Cliente(txtNomeCliente.Text, txtTelefone.Text);
+            // Cria um novo objeto Cliente com os dados da tela.
+            // Os valores vêm das caixas de texto (txtNomeCliente, txtTelefone, txtEmail).
+            var cliente = new Cliente(
+                txtNomeCliente.Text,   // Nome digitado
+                txtTelefone.Text,      // Telefone digitado
+                txtEmail.Text          // Email digitado
+            );
 
-            // Adiciona esse cliente na lista do repositório (banco temporário)
-            Repositorio.Clientes.Add(cliente);
+            // Salva o cliente no BANCO (via Service → Repository → SQLite).
+            // Como o cliente.Id é 0 (acabou de ser criado), o Service vai chamar Inserir().
+            _clienteService.Salvar(cliente);
 
-            // Limpa os campos de texto para o próximo cadastro
+            // Limpa os campos da tela para o próximo cadastro.
             txtNomeCliente.Clear();
             txtTelefone.Clear();
+            txtEmail.Clear();
 
-            // Atualiza a lista na tela para mostrar o novo cliente
+            // Atualiza a lista de clientes na tela (busca do banco de novo).
             CarregarClientes();
         }
 
-        // Evento clicou em "Cadastrar" (Serviço) 
 
+        // --- BOTÃO: CADASTRAR SERVIÇO ---
+        // Roda quando o usuário clica em "Cadastrar" na aba Serviços.
         private void btnCadastrarServico_Click(object sender, EventArgs e)
         {
-            // Tenta converter o texto do preço para decimal
-            // "TryParse" devolve "true" se deu certo, "false" se não
-            // "out decimal preco" = se deu certo, guarda o valor em "preco"
-            // Se não conseguir converter (ex: usuário digitou letras), sai do método
-            if (!decimal.TryParse(txtPreco.Text, out decimal preco)) return;
+            // Tenta converter o texto do preço para número decimal.
+            // "decimal.TryParse" tenta converter. Se conseguir, guarda em "valor".
+            // Se não conseguir (ex: usuário digitou letras), sai do método.
+            // "out decimal valor" = o resultado sai por essa variável.
+            if (!decimal.TryParse(txtPreco.Text, out decimal valor))
+                return;
 
-            // Cria um NOVO serviço com nome e preço
-            var servico = new Servico(txtNomeServico.Text, preco);
+            // Cria um novo objeto Servico com nome e valor.
+            var servico = new Servico(
+                txtNomeServico.Text,  // Nome do serviço
+                valor                 // Preço (já convertido para decimal)
+            );
 
-            // Adiciona no repositório
-            Repositorio.Servicos.Add(servico);
+            // Salva o serviço no banco.
+            _servicoService.Salvar(servico);
 
-            // Limpa os campos
+            // Limpa os campos.
             txtNomeServico.Clear();
             txtPreco.Clear();
 
-            // Atualiza a lista na tela
+            // Atualiza a lista de serviços na tela.
             CarregarServicos();
         }
 
-        // Evento clicou em "Agendar"
 
+        // --- BOTÃO: AGENDAR ---
+        // Roda quando o usuário clica em "Agendar" na aba Agendamentos.
         private void btnAgendar_Click(object sender, EventArgs e)
         {
-            // Verifica se o usuário selecionou um cliente E um serviço
-            // SelectedItem é o item que está selecionado no ComboBox
-            // Se qualquer um for null, mostra aviso e sai
-            if (cmbCliente.SelectedItem == null || cmbServico.SelectedItem == null)
+            // Verifica se o usuário selecionou um cliente E um serviço.
+            // Se não selecionou, mostra um aviso e para.
+            if (cmbCliente.SelectedItem == null ||
+                cmbServico.SelectedItem == null)
             {
-                MessageBox.Show("Selecione um cliente e um serviço.");
+                MessageBox.Show(
+                    "Selecione um cliente e um serviço."
+                );
                 return;
             }
 
-            // Junta a data escolhida com a hora escolhida
-            // .Date pega só a data (00:00), .TimeOfDay pega só o horário
-            DateTime dataHora = dtpData.Value.Date + dtpHora.Value.TimeOfDay;
+            // Junta a data escolhida (dtpData) com a hora escolhida (dtpHora).
+            // dtpData.Value.Date = só a data (sem hora)
+            // dtpHora.Value.TimeOfDay = só a hora (sem data)
+            // Somando os dois, temos data + hora completos.
+            DateTime dataHora =
+                dtpData.Value.Date +
+                dtpHora.Value.TimeOfDay;
 
-            // Cria um novo agendamento
-            // (Cliente) e (Servico) são "casts" convertemos o item selecionado
-            // de volta para o tipo original (porque SelectedItem é "object")
+            // Cria um novo agendamento.
+            // Os itens selecionados nos ComboBoxs são convertidos para Cliente e Servico.
+            // (Cliente) = conversão forçada (CAST) porque SelectedItem é Object.
             var ag = new Agendamento(
                 (Cliente)cmbCliente.SelectedItem,
                 (Servico)cmbServico.SelectedItem,
                 dataHora
             );
 
-            // Adiciona na lista de agendamentos
-            Repositorio.Agendamentos.Add(ag);
+            // Salva o agendamento no banco.
+            _agendamentoService.Salvar(ag);
 
-            // Atualiza a lista na tela
+            // Atualiza a lista de agendamentos na tela.
             CarregarAgendamentos();
 
+            // Mostra uma mensagem de confirmação.
             MessageBox.Show("Agendamento criado!");
         }
 
-        // Evento: selecionou um item na lista de agendamentos 
 
-        private void listAgendamentos_SelectedIndexChanged(object sender, EventArgs e)
+        // --- EVENTO: SELECIONAR AGENDAMENTO NA LISTA ---
+        // Roda quando o usuário clica em um agendamento na lista.
+        private void listAgendamentos_SelectedIndexChanged(
+            object sender,
+            EventArgs e)
         {
-            // "is" verifica se o item selecionado é do tipo Agendamento
-            // Se for, já guarda na variável "ag" — isso se chama "pattern matching"
-            // Funciona como: if (listAgendamentos.SelectedItem != null && é Agendamento)
+            // Verifica se o item selecionado é realmente um Agendamento.
+            // "is Agendamento ag" = tenta converter e já guarda em "ag".
             if (listAgendamentos.SelectedItem is Agendamento ag)
             {
-                // Quando o usuário clica em um agendamento,
-                // o ComboBox de status mostra o status ATUAL desse agendamento
+                // Se conseguiu, seleciona o status atual no ComboBox de status.
+                // Isso permite que o usuário veja o status e mude se quiser.
                 cmbStatus.SelectedItem = ag.Status;
             }
         }
 
-        //  Evento clicou em "Atualizar Status" 
 
-        private void btnAtualizarStatus_Click(object sender, EventArgs e)
+        // --- BOTÃO: ATUALIZAR STATUS ---
+        // Roda quando o usuário clica em "Atualizar Status".
+        private void btnAtualizarStatus_Click(
+            object sender,
+            EventArgs e)
         {
-            // "is not" = se NÃO for um Agendamento, mostra aviso
+            // Verifica se tem um agendamento selecionado na lista.
+            // "is not Agendamento ag" = se NÃO for um Agendamento, mostra erro.
             if (listAgendamentos.SelectedItem is not Agendamento ag)
             {
-                MessageBox.Show("Selecione um agendamento na lista.");
+                MessageBox.Show(
+                    "Selecione um agendamento na lista."
+                );
                 return;
             }
 
-            // Verifica se tem um status selecionado no ComboBox
-            // "is not string" = se não for texto (ex: estiver vazio), sai
-            if (cmbStatus.SelectedItem is not string novoStatus) return;
+            // Verifica se tem um status selecionado no ComboBox.
+            if (cmbStatus.SelectedItem is not string novoStatus)
+                return;
 
-            // Chama o método AlterarStatus do agendamento selecionado
-            // Esse método só aceita: "Agendado", "Confirmado", "Cancelado", "Concluido"
+            // Muda o status no objeto em memória.
             ag.AlterarStatus(novoStatus);
 
-            // Atualiza a lista para mostrar a mudança
+            // Salva a mudança no banco (via Service → Repository).
+            _agendamentoService.AtualizarStatus(ag.Id, ag.Status);
+
+            // Atualiza a lista na tela.
             CarregarAgendamentos();
         }
 
-        
-        // Métodos auxiliares que dá pra reutilizar
-        // Atualiza as listas de clientes (no ComboBox e no ListBox)
+
+        // --- CARREGAR CLIENTES ---
+        // Busca todos os clientes do BANCO e mostra na tela.
+        // Isso roda toda vez que a lista precisa ser atualizada.
         private void CarregarClientes()
         {
-            // "null" primeiro para limpar e depois "new List(...)" para recarregar
-            // Isso é um truque para forçar o ComboBox/ListBox a se atualizar
-            cmbCliente.DataSource = null;
-            cmbCliente.DataSource = new List<Cliente>(Repositorio.Clientes);
+            // Chama o service que busca no banco.
+            var clientes = _clienteService.ListarTodos();
 
+            // Atualiza o ComboBox de clientes (usado na aba Agendamentos).
+            cmbCliente.DataSource = null;                   // Limpa
+            cmbCliente.DataSource = new List<Cliente>(clientes); // Recarrega
+
+            // Atualiza a lista visual de clientes (aba Clientes).
             listClientes.DataSource = null;
-            listClientes.DataSource = new List<Cliente>(Repositorio.Clientes);
+            listClientes.DataSource = new List<Cliente>(clientes);
         }
 
-        // Atualiza as listas de serviços
+
+        // --- CARREGAR SERVIÇOS ---
+        // Busca todos os serviços do BANCO e mostra na tela.
         private void CarregarServicos()
         {
-            cmbServico.DataSource = null;
-            cmbServico.DataSource = new List<Servico>(Repositorio.Servicos);
+            var servicos = _servicoService.ListarTodos();
 
+            // Atualiza o ComboBox de serviços.
+            cmbServico.DataSource = null;
+            cmbServico.DataSource = new List<Servico>(servicos);
+
+            // Atualiza a lista visual de serviços.
             listServicos.DataSource = null;
-            listServicos.DataSource = new List<Servico>(Repositorio.Servicos);
+            listServicos.DataSource = new List<Servico>(servicos);
         }
 
-        // Atualiza a lista de agendamentos
+
+        // --- CARREGAR AGENDAMENTOS ---
+        // Busca todos os agendamentos do BANCO e mostra na tela.
         private void CarregarAgendamentos()
         {
+            var agendamentos = _agendamentoService.ListarTodos();
+
             listAgendamentos.DataSource = null;
-            listAgendamentos.DataSource = new List<Agendamento>(Repositorio.Agendamentos);
+            listAgendamentos.DataSource = new List<Agendamento>(agendamentos);
         }
 
+
+        // --- RBAC - CONTROLE DE ACESSO ---
+        // RBAC = Role-Based Access Control
+        // Isso define o que cada usuário pode fazer baseado no papel dele.
+        //
+        // 3 PAPÉIS:
+        // - Visualizador: só olha, não mexe em nada
+        // - Operador: pode cadastrar e alterar
+        // - Admin: pode tudo
         private void AplicarRegrasSegurancaRBAC()
         {
-            // Verifica qual papel está guardado no utilizador que fez login.
-            // Se por algum motivo estiver nulo, assume o papel mais seguro ("Visualizador") por precaução.
-            string papelDoUtilizador = FormLogin.UsuarioLogado?.PapelNome ?? "Visualizador";
+            // Pega o usuário que está logado no momento.
+            // AuthService.UsuarioAtual é definido quando o login é feito.
+            var usuario = AuthService.UsuarioAtual;
 
-            // Atualiza o título da barra da janela "míníma" para mostrar quem está logado
-            this.Text += $"|Usuário: {FormLogin.UsuarioLogado.Login} ({papelDoUtilizador})";
+            // Se não tem usuário logado ou não tem papel, assume "Visualizador".
+            // "??" = operador de coalescência: se for nulo, usa o valor da direita.
+            string papel =
+                usuario?.Papel?.Nome ?? "Visualizador";
 
-            //VISUALIZADOR
-            //Não pode inserir, editar ou excluir dados
-            if (papelDoUtilizador == "Visualizador")
+            // Mostra no título da janela quem está logado e qual o papel.
+            this.Text +=
+                $" | Usuário: {usuario?.Login} ({papel})";
+
+            // --- SE FOR VISUALIZADOR ---
+            // Só pode VER os dados, não pode criar ou alterar nada.
+            if (papel == "Visualizador")
             {
-                //Desabilita visualmente os botões (ficam cinzentos e não aceitam cliques)
+                // Desabilita (fica cinza) todos os botões de ação.
                 btnCadastrarCliente.Enabled = false;
                 btnCadastrarServico.Enabled = false;
                 btnAgendar.Enabled = false;
                 btnAtualizarStatus.Enabled = false;
 
-                // Mesmo que o utilizador consiga ativar o botão por algum truque, o clique não chamará código nenhum
+                // Remove os eventos de clique - segurança extra.
+                // Mesmo se alguém tentar clicar, não vai funcionar.
                 btnCadastrarCliente.Click -= btnCadastrarCliente_Click;
                 btnCadastrarServico.Click -= btnCadastrarServico_Click;
 
-                MessageBox.Show("Modo de apenas leitura.", "mínima", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                // Avisa o usuário que está em modo só leitura.
+                MessageBox.Show(
+                    "Modo somente leitura.",
+                    "Atenção",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information
+                );
+            }
 
-                //OPERADOR
-                //O operador pode fazer os agendamentos e cadastros normalmente (CRUD completo)
-            } else if (papelDoUtilizador == "Operador"){
-
-                //Botões funcionando normalmente
+            // --- SE FOR OPERADOR ---
+            // Pode cadastrar e alterar (permissão total no dia a dia).
+            else if (papel == "Operador")
+            {
                 btnCadastrarCliente.Enabled = true;
                 btnCadastrarServico.Enabled = true;
                 btnAgendar.Enabled = true;
-                btnAtualizarStatus.Enabled = true; 
-
-                //ADMIN tem liberdade, logo não precisa de restrições 
+                btnAtualizarStatus.Enabled = true;
             }
+
+            // --- SE FOR ADMIN ---
+            // Não precisa mexer em nada porque todos os botões já vêm habilitados
+            // por padrão. O admin tem controle total.
         }
     }
 }

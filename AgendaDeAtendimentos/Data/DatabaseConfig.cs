@@ -1,89 +1,143 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Microsoft.Data.Sqlite; //Permite usar os comandos do sqlite
+﻿using Microsoft.Data.Sqlite;
 
 
 namespace AgendaDeAtendimentos.Data
 {
+    // Classe responsável por configurar e inicializar o banco de dados.
+    // Como ela é static, seus métodos podem ser chamados sem criar um objeto.
     public static class DatabaseConfig
     {
-        //Define o nome e o caminho do arquivo do banco de dados (.db)
-        //O "Data Source=sistema.db" cria o arquivo diretamente na pasta onde o programa roda
-        private const string ConnectionString = "Data Source =sistema.db";
+        // String de conexão utilizada para acessar o banco SQLite.
+        // O arquivo do banco será criado com o nome sistema.db.
+        private const string ConnectionString = "Data Source=sistema.db";
 
-        // Método principal que será chamado quando o programa iniciar
+        // Método responsável por iniciar o banco de dados.
+        // Ele abre a conexão, cria as tabelas e insere os dados iniciais.
         public static void InicializarBanco()
         {
-            // Abre uma conexão segura com o arquivo de banco de dados
-            using (var conexao = new SqliteConnection(ConnectionString))
-            {
-                conexao.Open();
+            using var conexao = new SqliteConnection(ConnectionString);
 
-                //1. CRIAR A TABELA DE PAPEIS
-                //Cria a tabela se ela ainda não existir no arquivo
-                string sqlTabelaPapeis = @"
-                    CREATE TABLE IF NOT EXISTS papeis (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        nome TEXT NOT NULL UNIQUE
-                );";
+            // Abre a conexão com o banco.
+            conexao.Open();
 
-                using (var comando = new SqliteCommand(sqlTabelaPapeis, conexao))
-                {
-                    comando.ExecuteNonQuery(); //Execulta o comando sql no banco
-                }
+            // Cria as tabelas caso ainda não existam.
+            CriarTabelas(conexao);
 
-                //2. CRIAR TABELA DE USUARIOS
-                //O papel_id é uma Chave Estrangeira que aponta para a tabela de papeis
-                string sqlTabelaUsuarios = @"
-                CREATE TABLE IF NOT EXISTS usuarios(
-                    id INTEGER PRIMARY KEY AUTOINCREMENT, 
-                    nome TEXT NOT NULL,
-                    login TEXT NOT NULL UNIQUE,
-                    senha_hash TEXT NOT NULL,
-                    papel_id INTEGER NOT NULL,
-                    ativo INTEGER NOT NULL DEFAULT 1,
-                    FOREIGN KEY (papel_id) REFERENCES papeis(id)
-                );";
-
-                using (var comando = new SqliteCommand(sqlTabelaUsuarios, conexao))
-                {
-                    comando.ExecuteNonQuery();
-                }
-
-                //3. INSERIR DADOS INICIAIS SE ESTIVEREM VAZIOS
-                //Garante que o banco nasça com os papeis e o admin padrão cadastrados
-                InserirDadosIniciais(conexao);
-            }
+            // Insere os dados padrões do sistema.
+            InserirDadosIniciais(conexao);
         }
 
+        // Método responsável por criar todas as tabelas do sistema.
+        private static void CriarTabelas(SqliteConnection conexao)
+        {
+            // Tabela que armazena os papéis/perfis dos usuários.
+            Executar(conexao, @"CREATE TABLE IF NOT EXISTS papeis (
+                id   INTEGER PRIMARY KEY AUTOINCREMENT,
+                nome TEXT NOT NULL UNIQUE);");
+
+            // Tabela de usuários do sistema.
+            Executar(conexao, @"CREATE TABLE IF NOT EXISTS usuarios (
+                id         INTEGER PRIMARY KEY AUTOINCREMENT,
+                nome       TEXT    NOT NULL,
+                login      TEXT    NOT NULL UNIQUE,
+                senha_hash TEXT    NOT NULL,
+                papel_id   INTEGER NOT NULL,
+                ativo      INTEGER NOT NULL DEFAULT 1,
+                FOREIGN KEY (papel_id) REFERENCES papeis(id));");
+
+            // Tabela que armazena os clientes cadastrados.
+            Executar(conexao, @"CREATE TABLE IF NOT EXISTS clientes (
+                id       INTEGER PRIMARY KEY AUTOINCREMENT,
+                nome     TEXT NOT NULL,
+                telefone TEXT,
+                email    TEXT);");
+
+            // Tabela responsável pelos serviços oferecidos.
+            Executar(conexao, @"CREATE TABLE IF NOT EXISTS servicos (
+                id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                nome        TEXT NOT NULL,
+                descricao   TEXT,
+                duracao_min INTEGER NOT NULL DEFAULT 30,
+                valor       REAL    NOT NULL DEFAULT 0);");
+
+            // Tabela que registra os agendamentos realizados.
+            // Cada agendamento está ligado a um cliente e um serviço.
+            Executar(conexao, @"CREATE TABLE IF NOT EXISTS agendamentos (
+                id         INTEGER PRIMARY KEY AUTOINCREMENT,
+                cliente_id INTEGER NOT NULL,
+                servico_id INTEGER NOT NULL,
+                data_hora  TEXT    NOT NULL,
+                status     TEXT    NOT NULL DEFAULT 'Agendado',
+                observacao TEXT,
+                FOREIGN KEY (cliente_id) REFERENCES clientes(id),
+                FOREIGN KEY (servico_id) REFERENCES servicos(id));");
+        }
+
+        // Método responsável por inserir dados iniciais necessários
+        // para o funcionamento do sistema.
         private static void InserirDadosIniciais(SqliteConnection conexao)
         {
-            // Verifica se a tabela de papéis já tem registros
-            string sqlContarPapeis = "SELECT COUNT(*) FROM papeis;";
-            long quantidadePapeis = 0;
+            // Verifica quantos papéis existem cadastrados.
+            long qtdPapeis = (long)new SqliteCommand(
+                "SELECT COUNT(*) FROM papeis;", conexao).ExecuteScalar()!;
 
-            using (var comando = new SqliteCommand(sqlContarPapeis, conexao))
+            // Se não existir nenhum papel, cadastra os padrões.
+            if (qtdPapeis == 0)
             {
-                quantidadePapeis = (long)comando.ExecuteScalar();
-            }
-
-            // Se a tabela estiver zerada, insere os 3 níveis obrigatórios
-            if (quantidadePapeis == 0)
-            {
-                string sqlInserirPapeis = @"
+                Executar(conexao, @"
                     INSERT INTO papeis (id, nome) VALUES (1, 'Admin');
                     INSERT INTO papeis (id, nome) VALUES (2, 'Operador');
-                    INSERT INTO papeis (id, nome) VALUES (3, 'Visualizador');";
-
-                using (var comando = new SqliteCommand(sqlInserirPapeis, conexao))
-                {
-                    comando.ExecuteNonQuery();
-                }
+                    INSERT INTO papeis (id, nome) VALUES (3, 'Visualizador');");
             }
+
+            // Cria cada usuário apenas se o login ainda não existir.
+            // Isso permite adicionar novos usuários mesmo se o banco já foi criado antes.
+            CriarUsuarioSeNaoExistir(conexao, "Administrador", "admin", "admin123", 1);
+            CriarUsuarioSeNaoExistir(conexao, "Operador", "operador", "operador123", 2);
+            CriarUsuarioSeNaoExistir(conexao, "Visualizador", "visual", "visual123", 3);
         }
-        // Método público que permite a qualquer outra camada do sistema pegar a conexão com o banco
-        public static SqliteConnection ObterConexao()       
+
+        // Cria um usuário no banco somente se o login ainda não existir.
+        // Isso garante que possamos adicionar novos usuários mesmo em
+        // bancos já existentes (sem apagar os dados).
+        private static void CriarUsuarioSeNaoExistir(SqliteConnection conexao, string nome, string login, string senha, int papelId)
+        {
+            // Primeiro verifica se o login já existe.
+            var cmdCheck = new SqliteCommand(
+                "SELECT COUNT(*) FROM usuarios WHERE LOWER(login) = LOWER(@login);", conexao);
+            cmdCheck.Parameters.AddWithValue("@login", login);
+            long existe = (long)cmdCheck.ExecuteScalar()!;
+
+            // Se já existe, não faz nada.
+            if (existe > 0) return;
+
+            // Gera o hash da senha.
+            string hash = BCrypt.Net.BCrypt.HashPassword(senha);
+
+            // Insere o novo usuário.
+            using var cmdInsert = new SqliteCommand(@"
+                INSERT INTO usuarios (nome, login, senha_hash, papel_id, ativo)
+                VALUES (@nome, @login, @hash, @papelId, 1);", conexao);
+
+            cmdInsert.Parameters.AddWithValue("@nome", nome);
+            cmdInsert.Parameters.AddWithValue("@login", login);
+            cmdInsert.Parameters.AddWithValue("@hash", hash);
+            cmdInsert.Parameters.AddWithValue("@papelId", papelId);
+
+            cmdInsert.ExecuteNonQuery();
+        }
+
+        // Método auxiliar utilizado para executar comandos SQL
+        // que não retornam dados, como CREATE, INSERT ou UPDATE.
+        private static void Executar(SqliteConnection conexao, string sql)
+        {
+            using var cmd = new SqliteCommand(sql, conexao);
+            cmd.ExecuteNonQuery();
+        }
+
+        // Retorna uma nova conexão com o banco de dados.
+        // Pode ser utilizada pelos repositórios do sistema.
+        public static SqliteConnection ObterConexao()
         {
             return new SqliteConnection(ConnectionString);
         }
