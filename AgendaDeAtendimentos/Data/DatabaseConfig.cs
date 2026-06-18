@@ -83,7 +83,7 @@ namespace AgendaDeAtendimentos.Data
             }
         }
         // Método público que permite a qualquer outra camada do sistema pegar a conexão com o banco
-        public static SqliteConnection ObterConexao()
+        public static SqliteConnection ObterConexao()       
         {
             return new SqliteConnection(ConnectionString);
         }

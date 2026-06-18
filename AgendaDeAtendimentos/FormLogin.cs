@@ -5,7 +5,8 @@ using System.Data;
 using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
-using AgendaDeAtendimentos.Models; //Da acesso à classe usuário que esta na pasta Models 
+using AgendaDeAtendimentos.Models;
+using AgendaDeAtendimentos.Repositories; //Da acesso à classe usuário que esta na pasta Models 
 
 namespace AgendaDeAtendimentos
 {
@@ -13,11 +14,20 @@ namespace AgendaDeAtendimentos
     {
         // 'static' significa que esta variável fica guardada na memória global do programa. Qualquer outro ecrã (como o Form1) poderá consultar 'FormLogin.UsuarioLogado'
         // para saber quem está a mexer no sistema e qual é o seu papel.
-        public static Usuario UsuarioLogado { get; set; }
+
+        // Instancia o repositório para podermos fazer consultas ao banco de dados
+        private readonly UsuarioRepository _usuarioRepository = new UsuarioRepository();
+
+        public static Usuario? UsuarioLogado { get; set; }
         public FormLogin()
         {
             InitializeComponent();
         }
+
+        // Instancia o repositório para podermos fazer consultas ao banco de dados
+        private readonly UsuarioRepository _usuarioRepository = new UsuarioRepository();
+
+       
 
         private void btnEntrar_Click(object sender, EventArgs e)
         {
