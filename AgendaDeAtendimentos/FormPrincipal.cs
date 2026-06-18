@@ -59,6 +59,7 @@ namespace AgendaDeAtendimentos
             _clienteService = new ClienteService();
             _servicoService = new ServicoService();
             _agendamentoService = new AgendamentoService();
+            Estilo.Aplicar(this);
         }
 
 
@@ -333,6 +334,11 @@ namespace AgendaDeAtendimentos
             // --- SE FOR ADMIN ---
             // Não precisa mexer em nada porque todos os botões já vêm habilitados
             // por padrão. O admin tem controle total.
+        }
+
+        private void tabClientes_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }

@@ -109,6 +109,7 @@ namespace AgendaDeAtendimentos
             tabClientes.TabIndex = 0;
             tabClientes.Text = "Clientes";
             tabClientes.UseVisualStyleBackColor = true;
+            tabClientes.Click += tabClientes_Click;
             // 
             // listClientes
             // 
@@ -118,19 +119,19 @@ namespace AgendaDeAtendimentos
             listClientes.Size = new Size(200, 104);
             listClientes.TabIndex = 6;
             // 
-            // txtTelefone
-            //
-            txtTelefone.Location = new Point(8, 131);
-            txtTelefone.Name = "txtTelefone";
-            txtTelefone.Size = new Size(250, 27);
-            txtTelefone.TabIndex = 5;
-            //
             // txtEmail
-            //
+            // 
             txtEmail.Location = new Point(264, 131);
             txtEmail.Name = "txtEmail";
             txtEmail.Size = new Size(250, 27);
             txtEmail.TabIndex = 6;
+            // 
+            // txtTelefone
+            // 
+            txtTelefone.Location = new Point(8, 131);
+            txtTelefone.Name = "txtTelefone";
+            txtTelefone.Size = new Size(250, 27);
+            txtTelefone.TabIndex = 5;
             // 
             // txtNomeCliente
             // 
@@ -158,23 +159,23 @@ namespace AgendaDeAtendimentos
             label3.TabIndex = 2;
             label3.Text = "Clientes:";
             // 
-            // label2
-            //
-            label2.AutoSize = true;
-            label2.Location = new Point(8, 108);
-            label2.Name = "label2";
-            label2.Size = new Size(69, 20);
-            label2.TabIndex = 1;
-            label2.Text = "Telefone:";
-            //
             // labelEmail
-            //
+            // 
             labelEmail.AutoSize = true;
             labelEmail.Location = new Point(264, 108);
             labelEmail.Name = "labelEmail";
             labelEmail.Size = new Size(49, 20);
             labelEmail.TabIndex = 7;
             labelEmail.Text = "Email:";
+            // 
+            // label2
+            // 
+            label2.AutoSize = true;
+            label2.Location = new Point(8, 108);
+            label2.Name = "label2";
+            label2.Size = new Size(69, 20);
+            label2.TabIndex = 1;
+            label2.Text = "Telefone:";
             // 
             // label1
             // 

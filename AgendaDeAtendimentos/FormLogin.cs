@@ -16,7 +16,9 @@ namespace AgendaDeAtendimentos
 
             // Cria uma instância do serviço de autenticação
             _auth = new AuthService();
+            Estilo.Aplicar(this);
         }
+
 
         // Evento executado quando o botão Entrar é clicado
         private void btnEntrar_Click(object sender, EventArgs e)
@@ -115,5 +117,8 @@ namespace AgendaDeAtendimentos
         private void FormLogin_Load(object sender, EventArgs e)
         {
         }
+
+
     }
+
 }
