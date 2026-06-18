@@ -1,16 +1,4 @@
-﻿// ============================================================
-// Models/Agendamento.cs
-// ============================================================
-//
-// O QUE É UM AGENDAMENTO?
-// É o "combinado" - um cliente marcou um horário para fazer um serviço.
-// Agendamento amarrando três coisas: UM cliente + UM serviço + UMA data/hora.
-//
-// PENSE ASSIM:
-// - Cliente = QUEM vai vir
-// - Servico = O QUE vai fazer
-// - DataHora = QUANDO vai vir
-// - Status = SITUAÇÃO (Agendado, Confirmado, Cancelado, Concluido)
+﻿
 
 using System; // Para usar DateTime (data e hora) e Array (para listas)
 using AgendaDeAtendimentos.Models;
@@ -47,16 +35,6 @@ namespace AgendaDeAtendimentos.Models
         // Observacao: um campo extra para anotações (ex: "cliente prefere tal produto").
         public string Observacao { get; set; } = "";
 
-
-        // --- PROPRIEDADES DE EXIBIÇÃO (NÃO VÃO PARA O BANCO) ---
-
-        // Essas propriedades NÃO existem na tabela agendamentos do banco.
-        // Elas servem apenas para a gente exibir o NOME do cliente e do serviço na tela.
-        // Quando a gente carrega um agendamento do banco, faz um JOIN (junção)
-        // para buscar os dados do cliente e do serviço junto.
-
-        // "Cliente?" (com ?) = pode ser nulo. Nem sempre vai ter um objeto Cliente aqui.
-        // Isso evita erro caso a gente tente acessar sem carregar.
         public Cliente? Cliente { get; set; }
 
         // Servico? - mesma coisa, para exibir o nome do serviço na lista.
@@ -105,12 +83,6 @@ namespace AgendaDeAtendimentos.Models
                 Status = novoStatus;
             // Se não for válido, simplesmente não faz nada (ignora).
         }
-
-        // ToString() - como o agendamento aparece na lista da tela.
-        // "DataHora:HH:mm" = mostra só a hora e minuto (ex: 14:30)
-        // "Cliente?.Nome" = se Cliente não for nulo, mostra o nome (senão mostra vazio)
-        // O mesmo para Servico?.Nome
-        // Exemplo: "14:30 | João | Corte Degradê | Agendado"
         public override string ToString() =>
             $"{DataHora:HH:mm} | {Cliente?.Nome} | {Servico?.Nome} | {Status}";
     }

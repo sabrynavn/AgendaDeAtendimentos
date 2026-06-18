@@ -1,42 +1,15 @@
-﻿// ============================================================
-// FormPrincipal.cs - A TELA PRINCIPAL DO SISTEMA
-// ============================================================
-//
-// O QUE FAZ?
-// Essa é a janela principal do programa. Ela tem 3 abas:
-// 1. Clientes - cadastrar e listar clientes
-// 2. Serviços - cadastrar e listar serviços
-// 3. Agendamentos - agendar horários e mudar status
-//
-// COMO ELA SE CONECTA COM O BANCO?
-// ANTES: usava Repositorio.Clientes (lista em memória - perdia tudo ao fechar)
-// AGORA: usa os Services (ClienteService, ServicoService, AgendamentoService)
-//         que chamam os Repositories que salvam no SQLite
-//
-// ARQUITETURA (CAMINHO DOS DADOS):
-// FormPrincipal → Services → Repositories → SQLite (sistema.db)
-
-using System;
-using System.Collections.Generic;  // Para usar List<T>
-using System.Windows.Forms;        // Para usar os controles (Button, TextBox, etc.)
-using AgendaDeAtendimentos.Models;   // Para usar Cliente, Servico, Agendamento
-using AgendaDeAtendimentos.Services; // Para usar ClienteService, etc.
+﻿using System;
+using System.Collections.Generic;  
+using System.Windows.Forms;        
+using AgendaDeAtendimentos.Models;   
+using AgendaDeAtendimentos.Services;
 
 namespace AgendaDeAtendimentos
 {
-    // "public partial class FormPrincipal" - partial significa que a classe
-    // está dividida em DOIS arquivos:
-    // - FormPrincipal.cs (a lógica - esse aqui)
-    // - FormPrincipal.Designer.cs (os botões, textos, listas - criado pelo Visual Studio)
-    // ": Form" = essa classe HERDA de Form (vira uma janela do Windows)
+
     public partial class FormPrincipal : Form
     {
-        // --- VARIÁVEIS PRIVADAS (OS SERVICES) ---
 
-        // Essas são as "pontes" para a camada de dados.
-        // "private" = só essa classe pode usar.
-        // "readonly" = depois de criado, não pode trocar.
-        // "_clienteService" (underline) = convenção para variável privada.
 
         // Service responsável por lidar com clientes.
         private readonly ClienteService _clienteService;
@@ -88,14 +61,13 @@ namespace AgendaDeAtendimentos
                 return;
 
             // Cria um novo objeto Cliente com os dados da tela.
-            // Os valores vêm das caixas de texto (txtNomeCliente, txtTelefone, txtEmail).
             var cliente = new Cliente(
-                txtNomeCliente.Text,   // Nome digitado
-                txtTelefone.Text,      // Telefone digitado
-                txtEmail.Text          // Email digitado
+                txtNomeCliente.Text, 
+                txtTelefone.Text,      
+                txtEmail.Text          
             );
 
-            // Salva o cliente no BANCO (via Service → Repository → SQLite).
+            // Salva o cliente no banco
             // Como o cliente.Id é 0 (acabou de ser criado), o Service vai chamar Inserir().
             _clienteService.Salvar(cliente);
 
@@ -113,17 +85,13 @@ namespace AgendaDeAtendimentos
         // Roda quando o usuário clica em "Cadastrar" na aba Serviços.
         private void btnCadastrarServico_Click(object sender, EventArgs e)
         {
-            // Tenta converter o texto do preço para número decimal.
-            // "decimal.TryParse" tenta converter. Se conseguir, guarda em "valor".
-            // Se não conseguir (ex: usuário digitou letras), sai do método.
-            // "out decimal valor" = o resultado sai por essa variável.
             if (!decimal.TryParse(txtPreco.Text, out decimal valor))
                 return;
 
             // Cria um novo objeto Servico com nome e valor.
             var servico = new Servico(
-                txtNomeServico.Text,  // Nome do serviço
-                valor                 // Preço (já convertido para decimal)
+                txtNomeServico.Text,  
+                valor                 
             );
 
             // Salva o serviço no banco.
@@ -153,10 +121,6 @@ namespace AgendaDeAtendimentos
                 return;
             }
 
-            // Junta a data escolhida (dtpData) com a hora escolhida (dtpHora).
-            // dtpData.Value.Date = só a data (sem hora)
-            // dtpHora.Value.TimeOfDay = só a hora (sem data)
-            // Somando os dois, temos data + hora completos.
             DateTime dataHora =
                 dtpData.Value.Date +
                 dtpHora.Value.TimeOfDay;
@@ -248,7 +212,6 @@ namespace AgendaDeAtendimentos
 
 
         // --- CARREGAR SERVIÇOS ---
-        // Busca todos os serviços do BANCO e mostra na tela.
         private void CarregarServicos()
         {
             var servicos = _servicoService.ListarTodos();
@@ -264,7 +227,6 @@ namespace AgendaDeAtendimentos
 
 
         // --- CARREGAR AGENDAMENTOS ---
-        // Busca todos os agendamentos do BANCO e mostra na tela.
         private void CarregarAgendamentos()
         {
             var agendamentos = _agendamentoService.ListarTodos();
@@ -272,16 +234,6 @@ namespace AgendaDeAtendimentos
             listAgendamentos.DataSource = null;
             listAgendamentos.DataSource = new List<Agendamento>(agendamentos);
         }
-
-
-        // --- RBAC - CONTROLE DE ACESSO ---
-        // RBAC = Role-Based Access Control
-        // Isso define o que cada usuário pode fazer baseado no papel dele.
-        //
-        // 3 PAPÉIS:
-        // - Visualizador: só olha, não mexe em nada
-        // - Operador: pode cadastrar e alterar
-        // - Admin: pode tudo
         private void AplicarRegrasSegurancaRBAC()
         {
             // Pega o usuário que está logado no momento.
@@ -330,10 +282,6 @@ namespace AgendaDeAtendimentos
                 btnAgendar.Enabled = true;
                 btnAtualizarStatus.Enabled = true;
             }
-
-            // --- SE FOR ADMIN ---
-            // Não precisa mexer em nada porque todos os botões já vêm habilitados
-            // por padrão. O admin tem controle total.
         }
 
         private void tabClientes_Click(object sender, EventArgs e)
