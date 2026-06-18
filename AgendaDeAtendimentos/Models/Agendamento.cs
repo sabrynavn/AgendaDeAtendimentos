@@ -1,78 +1,117 @@
-﻿// Meu molde pra criar agendamentos
-// Um agendamento conecta um cliente, um serviço,
-// uma data/hora e um status.
+﻿// ============================================================
+// Models/Agendamento.cs
+// ============================================================
+//
+// O QUE É UM AGENDAMENTO?
+// É o "combinado" - um cliente marcou um horário para fazer um serviço.
+// Agendamento amarrando três coisas: UM cliente + UM serviço + UMA data/hora.
+//
+// PENSE ASSIM:
+// - Cliente = QUEM vai vir
+// - Servico = O QUE vai fazer
+// - DataHora = QUANDO vai vir
+// - Status = SITUAÇÃO (Agendado, Confirmado, Cancelado, Concluido)
 
-// "using" importa ferramentas de outros lugares do C#
-// Microsoft.VisualBasic tem funções auxiliares 
-// System.Security.Policy é para segurança , nem usei essa bomba
-// System.Linq permite usar .Contains() em listas e arrays
-using Microsoft.VisualBasic;
-using System.Security.Policy;
-using System.Linq;
+using System; // Para usar DateTime (data e hora) e Array (para listas)
+using AgendaDeAtendimentos.Models;
 
-public class Agendamento
+// Tudo isso já está dentro do namespace Models, mas o using é necessário
+// por segurança para garantir que as classes Cliente e Servico sejam encontradas.
+namespace AgendaDeAtendimentos.Models
 {
-    //Propriedades
-
-    // "Composição": um Agendamento TEM UM Cliente dentro dele
-    // Em vez de guardar só o nome, guardamos o objeto Cliente inteiro
-    // Isso permite acessar cliente.Nome, cliente.Telefone, etc.
-    public Cliente Cliente { get; set; }
-
-    // Mesma ideia: um Agendamento TEM UM Servico dentro dele
-    public Servico Servico { get; set; }
-
-    // DateTime é um tipo do C# que guarda DATA e HORA juntos
-    // Exemplo: 22/02/2026 18:50
-    public DateTime DataHora { get; set; }
-
-    // "private set" = só a própria classe pode alterar o status
-    // Isso é "encapsulamento" — proteger o dado e controlar como ele muda
-    // Para alterar, usamos o método AlterarStatus() lá embaixo
-    public string Status { get; private set; }
-
-    // construtor
-
-    // Para criar um agendamento, precisamos de:
-    // - Um cliente (objeto Cliente)
-    // - Um serviço (objeto Servico)
-    // - Uma data/hora (DateTime)
-    // Exemplo: new Agendamento(clienteObj, servicoObj, DateTime.Now)
-    public Agendamento(Cliente cliente, Servico servico, DateTime dataHora)
+    // Classe que representa um agendamento.
+    public class Agendamento
     {
-        Cliente = cliente;
-        Servico = servico;
-        DataHora = dataHora;
+        // --- PROPRIEDADES ---
 
-        // TODO agendamento começa com o status "Agendado"
-        Status = "Agendado";
-    }
+        // Id: identificador único do agendamento no banco.
+        public int Id { get; set; }
 
-    // Método para alterar o status com segurança
+        // ClienteId: o ID do cliente que agendou.
+        // É uma "chave estrangeira" - aponta para o ID do cliente na tabela clientes.
+        // Guardamos só o número (ID) em vez do objeto inteiro para o banco funcionar.
+        public int ClienteId { get; set; }
 
-    // Como Status tem "private set", precisamos desse método
-    // para alterar o status por fora da classe
-    // Ele SÓ aceita os 4 valores válidos — qualquer outro é ignorado
-    public void AlterarStatus(string novoStatus)
-    {
-        // Array com os únicos valores permitidos
-        string[] statusValidos = { "Agendado", "Confirmado", "Cancelado", "Concluido" };
+        // ServicoId: o ID do serviço que foi agendado.
+        // Mesma lógica - guardamos o ID para o banco.
+        public int ServicoId { get; set; }
 
-        // Contains() verifica se o novoStatus está dentro dos válidos
-        // Se não estiver, sai do método sem alterar nada
-        if (!statusValidos.Contains(novoStatus)) return;
+        // DataHora: o dia e a hora marcados.
+        // DateTime guarda data E hora juntos (ex: 25/12/2025 14:30:00).
+        public DateTime DataHora { get; set; }
 
-        // Se passou pela verificação, atualiza o status
-        Status = novoStatus;
-    }
+        // Status: a situação do agendamento.
+        // "= \"Agendado\"" = quando cria, já começa como "Agendado".
+        public string Status { get; set; } = "Agendado";
 
-    // ToString
+        // Observacao: um campo extra para anotações (ex: "cliente prefere tal produto").
+        public string Observacao { get; set; } = "";
 
-    // Define como o agendamento aparece na lista
-    // ":HH:mm" formata a hora para mostrar só horas e minutos
-    // Exemplo: "18:50 | João | Corte | Agendado"
-    public override string ToString()
-    {
-        return $"{DataHora:HH:mm} | {Cliente.Nome} | {Servico.Nome} | {Status}";
+
+        // --- PROPRIEDADES DE EXIBIÇÃO (NÃO VÃO PARA O BANCO) ---
+
+        // Essas propriedades NÃO existem na tabela agendamentos do banco.
+        // Elas servem apenas para a gente exibir o NOME do cliente e do serviço na tela.
+        // Quando a gente carrega um agendamento do banco, faz um JOIN (junção)
+        // para buscar os dados do cliente e do serviço junto.
+
+        // "Cliente?" (com ?) = pode ser nulo. Nem sempre vai ter um objeto Cliente aqui.
+        // Isso evita erro caso a gente tente acessar sem carregar.
+        public Cliente? Cliente { get; set; }
+
+        // Servico? - mesma coisa, para exibir o nome do serviço na lista.
+        public Servico? Servico { get; set; }
+
+
+        // --- CONSTRUTORES ---
+
+        // Construtor vazio - cria um agendamento sem dados (raro, mas útil).
+        public Agendamento() { }
+
+        // Construtor que recebe o cliente, o serviço e a data/hora.
+        // Esse é usado quando a pessoa clica em "Agendar" na tela.
+        // Repare que recebemos os OBJETOS (Cliente e Servico) completos,
+        // mas extraímos só os IDs para guardar no banco.
+        public Agendamento(Cliente cliente, Servico servico, DateTime dataHora)
+        {
+            // Pega o ID do objeto Cliente e guarda em ClienteId (int simples).
+            ClienteId = cliente.Id;
+            // Pega o ID do objeto Servico e guarda em ServicoId.
+            ServicoId = servico.Id;
+            // Guarda a data/hora recebida.
+            DataHora = dataHora;
+            // Todo agendamento novo começa como "Agendado".
+            Status = "Agendado";
+            // Guarda os objetos também para exibir na tela sem precisar buscar de novo.
+            Cliente = cliente;
+            Servico = servico;
+        }
+
+
+        // --- MÉTODOS ---
+
+        // AlterarStatus: muda o status do agendamento.
+        // Só aceita status válidos (não pode inventar um status qualquer).
+        public void AlterarStatus(string novoStatus)
+        {
+            // Lista de status que são permitidos no sistema.
+            string[] validos = { "Agendado", "Confirmado", "Cancelado", "Concluido" };
+
+            // Array.IndexOf procura o novoStatus dentro da lista validos.
+            // Se encontrar, retorna a posição (0, 1, 2 ou 3).
+            // Se não encontrar, retorna -1.
+            // Se >= 0, significa que encontrou, então pode mudar.
+            if (Array.IndexOf(validos, novoStatus) >= 0)
+                Status = novoStatus;
+            // Se não for válido, simplesmente não faz nada (ignora).
+        }
+
+        // ToString() - como o agendamento aparece na lista da tela.
+        // "DataHora:HH:mm" = mostra só a hora e minuto (ex: 14:30)
+        // "Cliente?.Nome" = se Cliente não for nulo, mostra o nome (senão mostra vazio)
+        // O mesmo para Servico?.Nome
+        // Exemplo: "14:30 | João | Corte Degradê | Agendado"
+        public override string ToString() =>
+            $"{DataHora:HH:mm} | {Cliente?.Nome} | {Servico?.Nome} | {Status}";
     }
 }

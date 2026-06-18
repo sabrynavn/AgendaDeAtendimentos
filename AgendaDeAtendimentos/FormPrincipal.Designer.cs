@@ -43,10 +43,12 @@ namespace AgendaDeAtendimentos
             tabControl = new TabControl();
             tabClientes = new TabPage();
             listClientes = new ListBox();
+            txtEmail = new TextBox();
             txtTelefone = new TextBox();
             txtNomeCliente = new TextBox();
             btnCadastrarCliente = new Button();
             label3 = new Label();
+            labelEmail = new Label();
             label2 = new Label();
             label1 = new Label();
             tabServicos = new TabPage();
@@ -92,10 +94,12 @@ namespace AgendaDeAtendimentos
             // tabClientes
             // 
             tabClientes.Controls.Add(listClientes);
+            tabClientes.Controls.Add(txtEmail);
             tabClientes.Controls.Add(txtTelefone);
             tabClientes.Controls.Add(txtNomeCliente);
             tabClientes.Controls.Add(btnCadastrarCliente);
             tabClientes.Controls.Add(label3);
+            tabClientes.Controls.Add(labelEmail);
             tabClientes.Controls.Add(label2);
             tabClientes.Controls.Add(label1);
             tabClientes.Location = new Point(4, 29);
@@ -115,11 +119,18 @@ namespace AgendaDeAtendimentos
             listClientes.TabIndex = 6;
             // 
             // txtTelefone
-            // 
+            //
             txtTelefone.Location = new Point(8, 131);
             txtTelefone.Name = "txtTelefone";
             txtTelefone.Size = new Size(250, 27);
             txtTelefone.TabIndex = 5;
+            //
+            // txtEmail
+            //
+            txtEmail.Location = new Point(264, 131);
+            txtEmail.Name = "txtEmail";
+            txtEmail.Size = new Size(250, 27);
+            txtEmail.TabIndex = 6;
             // 
             // txtNomeCliente
             // 
@@ -148,13 +159,22 @@ namespace AgendaDeAtendimentos
             label3.Text = "Clientes:";
             // 
             // label2
-            // 
+            //
             label2.AutoSize = true;
             label2.Location = new Point(8, 108);
             label2.Name = "label2";
             label2.Size = new Size(69, 20);
             label2.TabIndex = 1;
             label2.Text = "Telefone:";
+            //
+            // labelEmail
+            //
+            labelEmail.AutoSize = true;
+            labelEmail.Location = new Point(264, 108);
+            labelEmail.Name = "labelEmail";
+            labelEmail.Size = new Size(49, 20);
+            labelEmail.TabIndex = 7;
+            labelEmail.Text = "Email:";
             // 
             // label1
             // 
@@ -412,10 +432,12 @@ namespace AgendaDeAtendimentos
 
         // Controles da aba Clientes
         private ListBox listClientes;
+        private TextBox txtEmail;
         private TextBox txtTelefone;
         private TextBox txtNomeCliente;
         private Button btnCadastrarCliente;
         private Label label3;
+        private Label labelEmail;
         private Label label2;
         private Label label1;
 

@@ -90,26 +90,41 @@ namespace AgendaDeAtendimentos.Data
                     INSERT INTO papeis (id, nome) VALUES (3, 'Visualizador');");
             }
 
-            // Verifica se já existe algum usuário cadastrado.
-            long qtdUsuarios = (long)new SqliteCommand(
-                "SELECT COUNT(*) FROM usuarios;", conexao).ExecuteScalar()!;
+            // Cria cada usuário apenas se o login ainda não existir.
+            // Isso permite adicionar novos usuários mesmo se o banco já foi criado antes.
+            CriarUsuarioSeNaoExistir(conexao, "Administrador", "admin", "admin123", 1);
+            CriarUsuarioSeNaoExistir(conexao, "Operador", "operador", "operador123", 2);
+            CriarUsuarioSeNaoExistir(conexao, "Visualizador", "visual", "visual123", 3);
+        }
 
-            // Caso não exista, cria um usuário administrador padrão.
-            if (qtdUsuarios == 0)
-            {
-                // Gera o hash da senha para aumentar a segurança.
-                string hash = BCrypt.Net.BCrypt.HashPassword("admin123");
+        // Cria um usuário no banco somente se o login ainda não existir.
+        // Isso garante que possamos adicionar novos usuários mesmo em
+        // bancos já existentes (sem apagar os dados).
+        private static void CriarUsuarioSeNaoExistir(SqliteConnection conexao, string nome, string login, string senha, int papelId)
+        {
+            // Primeiro verifica se o login já existe.
+            var cmdCheck = new SqliteCommand(
+                "SELECT COUNT(*) FROM usuarios WHERE LOWER(login) = LOWER(@login);", conexao);
+            cmdCheck.Parameters.AddWithValue("@login", login);
+            long existe = (long)cmdCheck.ExecuteScalar()!;
 
-                var cmd = new SqliteCommand(@"
-                    INSERT INTO usuarios (nome, login, senha_hash, papel_id, ativo)
-                    VALUES ('Administrador', 'admin', @hash, 1, 1);", conexao);
+            // Se já existe, não faz nada.
+            if (existe > 0) return;
 
-                // Adiciona o hash como parâmetro da consulta.
-                cmd.Parameters.AddWithValue("@hash", hash);
+            // Gera o hash da senha.
+            string hash = BCrypt.Net.BCrypt.HashPassword(senha);
 
-                // Executa o comando de inserção.
-                cmd.ExecuteNonQuery();
-            }
+            // Insere o novo usuário.
+            using var cmdInsert = new SqliteCommand(@"
+                INSERT INTO usuarios (nome, login, senha_hash, papel_id, ativo)
+                VALUES (@nome, @login, @hash, @papelId, 1);", conexao);
+
+            cmdInsert.Parameters.AddWithValue("@nome", nome);
+            cmdInsert.Parameters.AddWithValue("@login", login);
+            cmdInsert.Parameters.AddWithValue("@hash", hash);
+            cmdInsert.Parameters.AddWithValue("@papelId", papelId);
+
+            cmdInsert.ExecuteNonQuery();
         }
 
         // Método auxiliar utilizado para executar comandos SQL
