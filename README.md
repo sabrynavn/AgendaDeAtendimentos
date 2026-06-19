@@ -87,13 +87,6 @@ Visualizador: login visual, senha visual123
 
 Essas credenciais servem apenas para teste e desenvolvimento. Em produção, troque as senhas e evite versionar o arquivo sistema.db.
 
-## Próximos passos
-
-- Implementar o UsuarioService, que hoje está vazio
-- Criar uma tela para gerenciar usuários (hoje só é possível pelo banco)
-- Adicionar validações de e-mail e telefone nos formulários
-- Permitir editar cliente, serviço e data de um agendamento já criado, hoje só é possível alterar o status
-
 ## Licença
 
 Projeto ainda sem licença definida.
