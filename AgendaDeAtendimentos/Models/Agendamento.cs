@@ -1,6 +1,4 @@
-﻿
-
-using System; // Para usar DateTime (data e hora) e Array (para listas)
+﻿using System; // Para usar DateTime (data e hora) e Array (para listas)
 using AgendaDeAtendimentos.Models;
 
 // Tudo isso já está dentro do namespace Models, mas o using é necessário

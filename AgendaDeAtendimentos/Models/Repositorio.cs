@@ -21,11 +21,11 @@
 // Pode ser removido numa limpeza futura.
 
 using System.Collections.Generic;
+
 // Precisa desse using para encontrar as classes Cliente, Servico, Agendamento
 // que estão no namespace AgendaDeAtendimentos.Models
-using AgendaDeAtendimentos.Models;
 
-namespace AgendaDeAtendimentos
+namespace AgendaDeAtendimentos.Models
 {
     // "static" = não precisa dar "new" para usar - mas por isso mesmo é limitado.
     public static class Repositorio

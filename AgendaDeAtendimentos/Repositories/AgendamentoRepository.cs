@@ -1,23 +1,3 @@
-// ============================================================
-// Repositories/AgendamentoRepository.cs
-// ============================================================
-//
-// O QUE TEM DE DIFERENTE AQUI?
-// Agendamento é mais complexo porque ele se CONECTA com outras tabelas.
-// Um agendamento TEM um cliente e TEM um serviço.
-// Para trazer os dados do cliente e do serviço JUNTO, usamos JOIN no SQL.
-//
-// JOIN (junção) é quando a gente pega dados de duas ou mais tabelas
-// e junta num único resultado. É como se fosse um "cola" entre tabelas.
-//
-// EXEMPLO:
-// Tabela agendamentos: [id, cliente_id, servico_id, data_hora]
-// Tabela clientes: [id, nome, telefone]
-// Tabela servicos: [id, nome, valor]
-//
-// Com JOIN, a gente faz uma consulta que devolve:
-// [agendamento_id, data_hora, cliente_nome, servico_nome, servico_valor]
-
 using System;
 using System.Collections.Generic;
 using Microsoft.Data.Sqlite;

@@ -7,14 +7,22 @@ namespace AgendaDeAtendimentos.Data
     // Como ela é static, seus métodos podem ser chamados sem criar um objeto.
     public static class DatabaseConfig
     {
-        // String de conexão utilizada para acessar o banco SQLite.
-        // O arquivo do banco será criado com o nome sistema.db.
-        private const string ConnectionString = "Data Source=sistema.db";
+        // Pasta de dados do usuário, fora da pasta de instalação do programa.
+        // Em "C:\Program Files" o usuário comum não tem permissão de escrita,
+        // então o banco precisa ficar em AppData para funcionar após instalado.
+        private static readonly string PastaDados = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "AgendaDeAtendimentos");
 
-        // Método responsável por iniciar o banco de dados.
-        // Ele abre a conexão, cria as tabelas e insere os dados iniciais.
-        public static void InicializarBanco()
+        private static readonly string CaminhoBanco = Path.Combine(PastaDados, "sistema.db");
+
+        // String de conexão utilizada para acessar o banco SQLite.
+        private static readonly string ConnectionString = $"Data Source={CaminhoBanco}";
+            public static void InicializarBanco()
         {
+            // Garante que a pasta de dados exista antes de criar o banco.
+            Directory.CreateDirectory(PastaDados);
+
             using var conexao = new SqliteConnection(ConnectionString);
 
             // Abre a conexão com o banco.
